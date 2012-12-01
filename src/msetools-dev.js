@@ -16,6 +16,7 @@
   window['msetools'] = {};
   var nameOfThisFile = 'msetools-dev.js';
   var files = [
+    'buffer_reader.js',
     'file.js',
     'element_list_parser.js',
     'webm_validator.js',

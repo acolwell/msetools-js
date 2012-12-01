@@ -15,6 +15,7 @@
 SOURCES=\
 	src/mse-decl.js \
 	src/msetools.js \
+	src/buffer_reader.js \
 	src/file.js \
 	src/element_list_parser.js \
 	src/bytestream_validator.js \

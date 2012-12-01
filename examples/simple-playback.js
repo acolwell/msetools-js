@@ -25,7 +25,7 @@
         mediaSource.endOfStream('network');
         return;
       } else if (status == 'eof') {
-        mediaSource.endOfStream(error);
+        mediaSource.endOfStream();
         return;
       }
       sourceBuffer.append(buf);
