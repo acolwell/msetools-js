@@ -58,6 +58,7 @@ function SourceBufferValidator(parent, id, type, sourceBuffer) {
 /**
  * ByteStreamValidator used for this source buffer.
  *
+ * @private
  * @type {ByteStreamValidator}
  */
 SourceBufferValidator.prototype.bytestreamValidator_ = null;
@@ -113,6 +114,7 @@ SourceBufferValidator.prototype.endOfStream = function(error) {
 /**
  * Parse bytestream type string.
  *
+ * @private
  * @param {string} type The type string to parse.
  * @return {?ByteStreamTypeInfo}
  */
@@ -205,6 +207,7 @@ function MediaSourceValidator(id, mediaSource) {
 }
 
 /**
+ * @private
  * @type {Array.<SourceBufferValidator>}
  */
 MediaSourceValidator.prototype.sourceBuffers_ = null;
@@ -219,6 +222,7 @@ MediaSourceValidator.prototype.mediaSource = function() {
 /**
  * @param {function(string) : SourceBuffer} originalMethod
  * @param {string} type
+ * @return {SourceBuffer}
  */
 MediaSourceValidator.prototype.addSourceBuffer = function(
   originalMethod, type) {

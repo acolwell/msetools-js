@@ -19,6 +19,7 @@
     'buffer_reader.js',
     'file.js',
     'element_list_parser.js',
+    'isobmff_parser.js',
     'webm_validator.js',
     'isobmff_validator.js',
     'validator.js'

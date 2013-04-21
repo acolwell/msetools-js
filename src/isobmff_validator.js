@@ -39,47 +39,56 @@ function ISOBMFFValidator() {
 
 /**
  * @type {msetools.ElementListParser}
+ * @private
  */
 ISOBMFFValidator.prototype.parser_ = null;
 
 /**
  * @type {number}
+ * @private
  */
 ISOBMFFValidator.prototype.default_sample_duration_ = -1;
 
 /**
  * @type {number}
+ * @private
  */
 ISOBMFFValidator.prototype.default_sample_size_ = -1;
 
 /**
  * @type {number}
+ * @private
  */
 ISOBMFFValidator.prototype.default_sample_flags_ = 0;
 
 /**
- *@type {ByteStreamTypeInfo?}
+ * @type {ByteStreamTypeInfo?}
+ * @private
  */
 ISOBMFFValidator.prototype.typeInfo_ = null;
 
 /**
- *@type {boolean}
+ * @type {boolean}
+ * @private
  */
 ISOBMFFValidator.prototype.expect_audio_ = false;
 
 /**
- *@type {boolean}
+ * @type {boolean}
+ * @private
  */
 ISOBMFFValidator.prototype.expect_video_ = false;
 
 
 /**
- *@type {boolean}
+ * @type {boolean}
+ * @private
  */
 ISOBMFFValidator.prototype.has_audio_ = false;
 
 /**
- *@type {boolean}
+ * @type {boolean}
+ * @private
  */
 ISOBMFFValidator.prototype.has_video_ = false;
 
@@ -246,7 +255,7 @@ ISOBMFFValidator.prototype.isIdAFullBox = function(id) {
 /**
  * @override
  */
-ISOBMFFValidator.prototype.onListStart = function(id, elementPosition, 
+ISOBMFFValidator.prototype.onListStart = function(id, elementPosition,
                                                   bodyPosition) {
   /*
   console.log('onListStart(' + id +
@@ -272,19 +281,19 @@ ISOBMFFValidator.prototype.onListEnd = function(id, size) {
 
   if (id == 'moof') {
     if (this.has_video_ != this.expect_video_) {
-      console.log('The moov box '
-          + (this.has_video_ ? ' has' : ' does not have')
-          + ' a video track, but a video codec'
-          + (this.expect_video_ ? ' was' : ' was not')
-          + ' specified in the type passed to addSourceBuffer()');
+      console.log('The moov box ' +
+                  (this.has_video_ ? ' has' : ' does not have') +
+                  ' a video track, but a video codec' +
+                  (this.expect_video_ ? ' was' : ' was not') +
+                  ' specified in the type passed to addSourceBuffer()');
     }
 
     if (this.has_audio_ != this.expect_audio_) {
-      console.log('The moov box '
-          + (this.has_audio_ ? ' has' : ' does not have')
-          + ' an audio track, but an audio codec'
-          + (this.expect_audio_ ? ' was' : ' was not')
-          + ' specified in the type passed to addSourceBuffer()');
+      console.log('The moov box ' +
+                  (this.has_audio_ ? ' has' : ' does not have') +
+                  ' an audio track, but an audio codec' +
+                  (this.expect_audio_ ? ' was' : ' was not') +
+                  ' specified in the type passed to addSourceBuffer()');
     }
   } else if (id == 'trak') {
     this.currentTrackID_ = 0;
@@ -492,7 +501,8 @@ ISOBMFFValidator.prototype.parseHdlr = function(version, flags, value) {
   } else if (handler_type == 'soun') {
     this.has_audio_ = true;
   } else {
-    console.log('TrackID ' + this.currentTrackID_ + ': handler_type "' + handler_type + '" is not supported');
+    console.log('TrackID ' + this.currentTrackID_ + ': handler_type "' +
+                handler_type + '" is not supported');
     return false;
   }
 
@@ -851,6 +861,7 @@ ISOBMFFValidator.prototype.parseTfhd = function(version, flags, value) {
 /**
  * Conversts a sample_flags field to a string.
  *
+ * @private
  * @param {number} flags The contents of a sample_flags field.
  * @return {string} A string representation of the flags.
  */

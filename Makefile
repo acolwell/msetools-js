@@ -20,6 +20,7 @@ SOURCES=\
 	src/element_list_parser.js \
 	src/bytestream_validator.js \
 	src/webm_validator.js \
+	src/isobmff_parser.js \
 	src/isobmff_validator.js \
 	src/validator.js \
 

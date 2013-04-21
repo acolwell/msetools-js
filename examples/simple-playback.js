@@ -81,7 +81,7 @@
 
     if (type.length == 0) {
       console.log('Couldn\'t determine type from codec string "' +
-	  codecs + '"');
+                  codecs + '"');
       return;
     }
 
@@ -93,8 +93,8 @@
     };
     appendMoreData = createAppendFunction(mediaSource, sourceBuffer, file,
                                           isPlaying);
-    videoTag.addEventListener('progress', onProgress.bind(videoTag,
-							  mediaSource));
+    videoTag.addEventListener('progress',
+                              onProgress.bind(videoTag,mediaSource));
 
     appendMoreData();
   }

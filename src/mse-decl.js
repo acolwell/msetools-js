@@ -91,4 +91,7 @@ SourceBuffer.prototype.timestampOffset;
  */
 SourceBuffer.prototype.append = function(data) {};
 
+/**
+ * Abort the current append sequence.
+ */
 SourceBuffer.prototype.abort = function() {};

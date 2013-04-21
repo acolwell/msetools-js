@@ -281,7 +281,8 @@ function parseWebMId_(buf) {
     return { status: msetools.ParserStatus.ERROR, bytesUsed: 0, id: '' };
 
   if (buf.length < 1)
-    return { status: msetools.ParserStatus.NEED_MORE_DATA, bytesUsed: 0, id: '' };
+    return { status: msetools.ParserStatus.NEED_MORE_DATA, bytesUsed: 0,
+             id: '' };
 
   var bytesNeeded = 0;
   var mask = 0x80;
@@ -299,7 +300,8 @@ function parseWebMId_(buf) {
     return { status: msetools.ParserStatus.ERROR, bytesUsed: 0, id: '' };
 
   if (buf.length < bytesNeeded)
-    return { status: msetools.ParserStatus.NEED_MORE_DATA, bytesUsed: 0, id: '' };
+    return { status: msetools.ParserStatus.NEED_MORE_DATA, bytesUsed: 0,
+             id: '' };
 
 
   /** @type {number} */ var raw_id = buf[0];
@@ -333,7 +335,8 @@ function parseWebMSize_(buf) {
     return { status: msetools.ParserStatus.ERROR, bytesUsed: 0, size: 0 };
 
   if (buf.length < 1)
-    return { status: msetools.ParserStatus.NEED_MORE_DATA, bytesUsed: 0, size: 0 };
+    return { status: msetools.ParserStatus.NEED_MORE_DATA, bytesUsed: 0,
+             size: 0 };
 
   var bytesNeeded = 0;
   var mask = 0x80;
@@ -392,8 +395,9 @@ WebMValidator.prototype.parseElementHeader = function(buf) {
 
   bytesUsed += result.bytesUsed;
 
-  //console.log('msetools.parseElementHeader : id ' + msetools.getNameForId(id) +
-  //     ' size ' + result.size);
+  //console.log('msetools.parseElementHeader : id ' +
+  //              msetools.getNameForId(id) +
+  //              ' size ' + result.size);
   return {
     status: msetools.ParserStatus.OK,
     bytesUsed: bytesUsed,
@@ -402,7 +406,10 @@ WebMValidator.prototype.parseElementHeader = function(buf) {
   };
 };
 
-WebMValidator.prototype.onListStart = function(id, elementPosition, 
+/**
+ * @override
+ */
+WebMValidator.prototype.onListStart = function(id, elementPosition,
                                                bodyPosition) {
   console.log('onListStart(' + id +
                      ', ' + elementPosition +

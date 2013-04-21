@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      #hex_view .selected { background-color: #ffff00; }
+      ul.box_list { padding-left: 15px; }
+      #element_tree { margin-right: 15px; }
+    </style>
+    <script type="text/javascript" src="../src/msetools-dev.js"></script>
+    <script type="text/javascript" src="hex-viewer.js"></script>
+  </head>
+  <body onload="onPageLoad()">
+    <div>
+      <label>URL:</label><input id="u" size="50" type="text"><button id="load_button">Load</button><br>
+    </div>
+    <div id="element_tree" style="float:left"></div>
+    <div>
+      <table id="hex_view">
+        <tbody></tbody>
+      </table>
+      <button id="prev_button" style="visibility:hidden">Prev</button>
+      <button id="next_button">Next</button>
+    </div>
+  </body>
+</html>

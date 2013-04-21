@@ -30,7 +30,7 @@ function RemoteFile(url) {
  * @private
  * @type {number}
  */
-RemoteFile.prototype.MIN_REQUEST_SIZE = 1024;
+RemoteFile.prototype.MIN_REQUEST_SIZE_ = 1024;
 
 
 /**
@@ -226,7 +226,7 @@ RemoteFile.prototype.runCallback_ = function(status, buffer) {
 RemoteFile.prototype.downloadData_ = function(readSize, 
                                               downloadPosition,     
                                               downloadSize) {
-  var requestSize = this.MIN_REQUEST_SIZE;
+  var requestSize = this.MIN_REQUEST_SIZE_;
   if (requestSize < downloadSize)
     requestSize = downloadSize;
 

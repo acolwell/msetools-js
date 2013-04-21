@@ -87,10 +87,13 @@ msetools.ParserClient.prototype.onListEnd = function(id, size) {};
  * Called when a binary element is parsed.
  * @param {string} id The ID for the element.
  * @param {Uint8Array} value The value in the element.
+ * @param {number} elementPosition The position of element header.
+ * @param {number} bodyPosition The position of element body.
  * @return {boolean} True if the element was accepted by the client.
  * False if the client wants the parser to signal a parse error.
  */
-msetools.ParserClient.prototype.onBinary = function(id, value) {};
+msetools.ParserClient.prototype.onBinary =
+  function(id, value, elementPosition, bodyPosition) {};
 
 
 /**
@@ -231,7 +234,8 @@ msetools.ElementListParser.prototype.append = function(newBuffer) {
     var elementBody = buf.subarray(res.bytesUsed,
                                    res.bytesUsed + res.size);
 
-    if (!this.client_.onBinary(res.id, elementBody))
+    if (!this.client_.onBinary(res.id, elementBody, this.bytePosition_,
+                               this.bytePosition_ + res.bytesUsed))
       return msetools.ParserStatus.ERROR;
 
     i += wholeElementSize;
