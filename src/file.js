@@ -303,6 +303,11 @@ RemoteFile.prototype.downloadDataDone_ = function(readSize, buffer) {
     this.buffer_.set(buffer, oldBuffer.length);
   }
 
+  if (buffer && buffer.length < readSize) {
+    this.size_ = this.bufferPosition_ + this.buffer_.length;
+    readSize = buffer.length;
+  }
+
   this.doRead_(readSize);
 };
 

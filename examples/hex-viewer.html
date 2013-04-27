@@ -1,6 +1,9 @@
 <!doctype html>
 <html>
   <head>
+    <link rel="stylesheet" href="lib/smoothness/jquery-ui.min.css" />
+    <script src="lib/jquery-1.9.1.js"></script>
+    <script src="lib/jquery-ui.js"></script>
     <style>
       #hex_view .selected { background-color: #ffff00; }
       ul.box_list { padding-left: 15px; }
@@ -8,18 +11,23 @@
     </style>
     <script type="text/javascript" src="../src/msetools-dev.js"></script>
     <script type="text/javascript" src="hex-viewer.js"></script>
+    <script>
+      $( "#menu" ).menu();
+    </script>
   </head>
   <body onload="onPageLoad()">
     <div>
       <label>URL:</label><input id="u" size="50" type="text"><button id="load_button">Load</button><br>
     </div>
-    <div id="element_tree" style="float:left"></div>
-    <div>
+    <div style="float:left">
       <table id="hex_view">
         <tbody></tbody>
       </table>
       <button id="prev_button" style="visibility:hidden">Prev</button>
       <button id="next_button">Next</button>
+    </div>
+    <div id="element_tree" style="float:left">
+      <div>Boxes</div>
     </div>
   </body>
 </html>

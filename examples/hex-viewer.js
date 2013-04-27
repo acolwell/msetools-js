@@ -12,6 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 (function(window, undefined) {
+  function FieldInfo(id, start, end) {
+    this.id = id;
+    this.start = start;
+    this.end = end;
+    this.children = [];
+  }
+
+  FieldInfo.prototype.addChild = function(fieldInfo) {
+    this.children.push(fieldInfo);
+  };
 
   function HexView(id, pageSize, readCallback) {
     this.table_ = document.getElementById(id);
@@ -20,7 +30,7 @@
                   "'. View not updated.");
       return;
     }
-    this.table_.style.fontFamily = "monospace";
+    this.table_.style.fontFamily = 'monospace';
     this.pageSize_ = pageSize;
     this.readCallback_ = readCallback;
   };
@@ -203,26 +213,42 @@
     this.readSize_ = 4096;
     this.file_.read(this.readSize_, this.onReadDone_.bind(this));
     this.list_stack_ = [];
-    this.child_info_ = [];
+    this.field_info_ = [];
+    this.flag_info_ = {
+      'trun': [
+        ['data-offset-present', 0x1],
+        ['first-sample-flags-present', 0x4],
+        ['sample-duration-present', 0x100],
+        ['sample-size-present', 0x200],
+        ['sample-flags-present', 0x400],
+        ['sample-composition-time-offsets-present', 0x800]
+      ]
+    };
   };
 
-  ISOClient.prototype.dumpChildren_ = function(child_info) {
+  ISOClient.prototype.dumpFieldInfoList_ = function(fieldInfoList) {
+    if (fieldInfoList.length == 0)
+      return "";
+
     var result = '<ul class="box_list">';
-    for (var i = 0; i < child_info.length; ++i) {
-      var info = child_info[i];
-      result += "<li onclick='selectBox(" + info.start + ',' + info.end + ")'>";
-      result += info.id;
+    for (var i = 0; i < fieldInfoList.length; ++i) {
+      var fieldInfo = fieldInfoList[i];
+      result += "<li><a href='#' onclick='selectBox(" + fieldInfo.start + ',' +
+          fieldInfo.end + ")' style='white-space:nowrap;'>";
+      result += fieldInfo.id;
+      result += '</a>';
+      result += this.dumpFieldInfoList_(fieldInfo.children);
       result += '</li>';
-      result += this.dumpChildren_(info.child_info);
     }
     return result + '</ul>';
   };
 
   ISOClient.prototype.onReadDone_ = function(status, buf) {
     if (status == 'eof') {
-      var str = this.dumpChildren_(this.child_info_);
+      var str = this.dumpFieldInfoList_(this.field_info_);
       var div = document.getElementById('element_tree');
       div.innerHTML = str;
+      $( "#element_tree ul").menu();
       this.doneCallback_(true);
       return;
     }
@@ -243,8 +269,8 @@
   ISOClient.prototype.onListStart = function(id, elementPosition,
                                              bodyPosition) {
     this.list_stack_.push({ id: id, start: elementPosition,
-                            child_info: this.child_info_ });
-    this.child_info_ = [];
+                            child_info: this.field_info_ });
+    this.field_info_ = [];
     return msetools.ParserStatus.OK;
   };
 
@@ -255,40 +281,55 @@
       console.log("Unexpected list end for id '" + id + "'");
       return false;
     }
-    info.end = info.start + size;
 
-    // Restore old child_info_ state.
-    var tmp = this.child_info_;
-    this.child_info_ = info.child_info;
-    info.child_info = tmp;
-    this.child_info_.push(info);
+    var fieldInfo = new FieldInfo(info.id, info.start, info.start + size);
+    for (var i = 0; i < this.field_info_.length; ++i) {
+      fieldInfo.addChild(this.field_info_[i]);
+    }
+
+    // Restore old field_info_ state.
+    this.field_info_ = info.child_info;
+    this.field_info_.push(fieldInfo);
     return true;
   };
 
 
   ISOClient.prototype.onBox = function(id, value, elementPosition,
                                        bodyPosition) {
-    var info = {
-      id: id,
-      start: elementPosition,
-      end: bodyPosition + value.length,
-      child_info: []
-    };
+    this.field_info_.push(
+      new FieldInfo(id, elementPosition, bodyPosition + value.length));
 
-    this.child_info_.push(info);
     return true;
   };
 
   ISOClient.prototype.onFullBox = function(id, version, flags, value,
                                            elementPosition, bodyPosition) {
-    var info = {
-      id: id,
-      start: elementPosition,
-      end: bodyPosition + value.length,
-      child_info: []
-    };
 
-    this.child_info_.push(info);
+    var info = new FieldInfo(id, elementPosition, bodyPosition + value.length);
+
+    info.addChild(
+      new FieldInfo(id + '.version', bodyPosition - 4, bodyPosition - 3));
+    info.addChild(new FieldInfo(id + '.flags', bodyPosition - 3, bodyPosition));
+
+    flag_info = this.flag_info_[id];
+    if (flag_info) {
+      for (var i = 0; i < flag_info.length; ++i) {
+        var name = flag_info[i][0];
+        var mask = flag_info[i][1];
+        var position = bodyPosition - 3;
+        if (mask < 0x010000)
+          ++position;
+        if (mask < 0x000100)
+          ++position;
+
+        if ((flags & mask) != 0) {
+          info.addChild(new FieldInfo(id + '.' + name, position, position + 1));
+        }
+      }
+    }
+
+    this.field_info_.push(info);
+
     return true;
   };
 
