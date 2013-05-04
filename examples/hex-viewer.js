@@ -165,8 +165,14 @@
 
         var byte = this.buffer_[j];
         hexStr += this.toHex_(byte, 2);
-        if (byte <= 0x20) {
+        if (byte <= 0x20 || (byte > 0x7E && byte < 0xA0)) {
           charStr += '.';
+        } else if (byte == 0x26) {
+          charStr += '&amp;'
+        } else if (byte == 0x3C) {
+          charStr += '&lt;'
+        } else if (byte == 0x3E) {
+          charStr += '&gt;'
         } else {
           charStr += String.fromCharCode(byte);
         }
