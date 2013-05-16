@@ -1,0 +1,3 @@
+[submodule "msetools-js"]
+	path = msetools-js
+	url = git://github.com/acolwell/msetools-js.git
