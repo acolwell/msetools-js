@@ -445,6 +445,15 @@
         ['Track_in_movie', 0x2],
         ['Track_in_preview', 0x4]
       ],
+      'tfhd': [
+        ['base-data-offset', 0x1],
+        ['sample-description-index-present', 0x2],
+        ['default-sample-duration-present', 0x8],
+        ['default-sample-size-present', 0x10],
+        ['default-sample-flags-present', 0x20],
+        ['duration-is-empty', 0x10000],
+        ['default-base-is-moof', 0x20000],
+      ],
       'trun': [
         ['data-offset-present', 0x1],
         ['first-sample-flags-present', 0x4],
