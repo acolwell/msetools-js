@@ -21,6 +21,10 @@
 
     var readDone = function(status, buf) {
       readPending = false;
+
+      if (mediaSource.readyState == "closed")
+        return;
+
       if (status == 'error') {
         mediaSource.endOfStream('network');
         return;
@@ -28,16 +32,24 @@
         mediaSource.endOfStream();
         return;
       }
-      sourceBuffer.append(buf);
 
-      if (isPlaying())
-        return;
+      var appendDone = function() {
+        sourceBuffer.removeEventListener("updateend", appendDone);
+        if (isPlaying())
+          return;
 
-      appendMoreData();
+        appendMoreData();
+      };
+      sourceBuffer.addEventListener("updateend", appendDone);
+	try {
+      sourceBuffer.appendBuffer(buf);
+	} catch(e) {
+	    console.log(e);
+	}
     };
 
     return function() {
-      if (readPending)
+      if (readPending || mediaSource.readyState == "closed" || sourceBuffer.updating)
         return;
 
       if (file.isEndOfFile()) {
@@ -55,8 +67,12 @@
       }
 
       readPending = true;
-      file.read(128 * 1024, readDone);
+      file.read(1 * 1024 * 1024, readDone);
     }
+  }
+
+  function onAppendError(e) {
+    console.log("Append error!");
   }
 
   function onSourceOpen(videoTag, e) {
@@ -73,9 +89,11 @@
     var codecs = document.getElementById('c').value;
 
     var type = '';
-    if (codecs.indexOf('avc1.') != -1 || codecs.indexOf('avc1.') != -1) {
+    if (codecs.indexOf('avc1.') != -1 || codecs.indexOf('mp4a.') != -1) {
       type = 'video/mp4; codecs="' + codecs + '"';
-    } else if (codecs.indexOf('vp8') != -1 || codecs.indexOf('vorbis') != -1) {
+    } else if (codecs.indexOf('vp8') != -1 ||
+               codecs.indexOf('vp9') != -1 ||
+               codecs.indexOf('vorbis') != -1) {
       type = 'video/webm; codecs="' + codecs + '"';
     }
 
@@ -87,6 +105,9 @@
 
     var info = { url: url, type: type};
     var sourceBuffer = mediaSource.addSourceBuffer(info.type);
+
+    sourceBuffer.addEventListener("error", onAppendError);
+
     var file = new msetools.RemoteFile(info.url);
     var isPlaying = function() {
       return videoTag.readyState > videoTag.HAVE_FUTURE_DATA;
@@ -136,13 +157,10 @@
   }
 
   function loadUrl() {
-    window.MediaSource = window.MediaSource || window.WebKitMediaSource;
-
     var video = document.getElementById('v');
     var mediaSource = new MediaSource();
 
-    msetools.attachValidator(mediaSource);
-    mediaSource.addEventListener('webkitsourceopen',
+    mediaSource.addEventListener('sourceopen',
                                  onSourceOpen.bind(this, video));
     video.src = window.URL.createObjectURL(mediaSource);
   }

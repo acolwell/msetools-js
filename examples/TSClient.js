@@ -179,7 +179,7 @@
   function TSClient(url, doneCallback) {
     this.doneCallback_ = doneCallback;
     this.file_ = new msetools.RemoteFile(url);
-    this.readSize_ = 128 * 1096;
+    this.readSize_ = 256 * 1024;
     this.file_.read(this.readSize_, this.onReadDone_.bind(this));
     this.list_stack_ = [];
     this.fieldInfo_ = []

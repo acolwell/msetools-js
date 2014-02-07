@@ -429,7 +429,11 @@
       valueDiv.textContent = value;
     } else {
       valueDiv.style.visibility = 'hidden';
+      valueDiv.textContent = "";
     }
+
+    valueDiv.style.visibility = 'visible';
+      valueDiv.textContent += " offset " + start.toString(16) + "(" + start + ")";
 
     hexView.select(start, end);
 
