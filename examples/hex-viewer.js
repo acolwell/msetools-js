@@ -345,253 +345,6 @@
                               this.buf_.subarray(this.index_), child, true);
   }
 
-  function parseMvhd(version, flags, bfp) {
-    var varSize = (version == 1) ? 64 : 32;
-    try {
-      bfp.addField('creation_time', varSize);
-      bfp.addField('modificaton_time', varSize);
-      bfp.addUInt('timescale', 32);
-      bfp.addUInt('duration', varSize);
-      bfp.addField('rate', 32);
-      bfp.addField('volume', 16);
-      bfp.skip(16); // reserved = 0
-      bfp.skip(32, 2); // int(32)[2] reserved = 0
-      bfp.addField('matrix', 32, 9);
-      bfp.addField('pre_defined', 32, 6);
-      bfp.addUInt('next_track_ID', 32);
-    } catch (e) {
-      console.log(e.message);
-      return false;
-    }
-    return true;
-  }
-
-  function parseSampleFlags(bfp) {
-    bfp.skip(4); // reserved = 0
-    bfp.addUInt('is_leading', 2);
-    bfp.addUInt('sample_depends_on', 2);
-    bfp.addUInt('sample_is_depended_on', 2);
-    bfp.addUInt('sample_has_redundancy', 2);
-    bfp.addUInt('sample_padding_Value', 3);
-    bfp.addUInt('sample_is_non_sync_sample', 1);
-    bfp.addUInt('sample_degradation_priority', 16);
-  }
-
-  function parseTrex(version, flags, bfp) {
-    try {
-      bfp.addUInt('track_ID', 32);
-      bfp.addUInt('default_sample_description_index', 32);
-      bfp.addUInt('default_sample_duration', 32);
-      bfp.addUInt('default_sample_size', 32);
-      parseSampleFlags(bfp.createChildParser('default_sample_flags'));
-    } catch (e) {
-      console.log(e.message);
-      return false;
-    }
-    return true;
-  }
-
-  function parseTkhd(version, flags, bfp) {
-    var varSize = (version == 1) ? 64 : 32;
-    try {
-      bfp.addField('creation_time', varSize);
-      bfp.addField('modificaton_time', varSize);
-      bfp.addUInt('track_ID', 32);
-      bfp.skip(32); // reserved = 0
-      bfp.addUInt('duration', varSize);
-      bfp.skip(32, 2); // int(32)[2] reserved = 0
-      bfp.addUInt('layer', 16);
-      bfp.addUInt('alternate_group', 16);
-      bfp.addField('volume', 16);
-      bfp.skip(16); // reserved = 0
-      bfp.addField('matrix', 32, 9);
-      bfp.addUInt('width', 32);
-      bfp.addUInt('height', 32);
-    } catch (e) {
-      console.log(e.message);
-      return false;
-    }
-    return true;
-  }
-
-  function parseMdhd(version, flags, bfp) {
-    var varSize = (version == 1) ? 64 : 32;
-    try {
-      bfp.addField('creation_time', varSize);
-      bfp.addField('modificaton_time', varSize);
-      bfp.addUInt('timescale', 32);
-      bfp.addUInt('duration', varSize);
-      bfp.skip(1);
-      bfp.addField('language', 5,3);
-      bfp.addField('pre_defined', 16)
-    } catch (e) {
-      console.log(e.message);
-      return false;
-    }
-    return true;
-  }
-
-  function ISOClient(url, doneCallback) {
-    this.doneCallback_ = doneCallback;
-    this.parser_ = new msetools.ISOBMFFParser(this);
-    this.file_ = new msetools.RemoteFile(url);
-    this.readSize_ = 4096;
-    this.file_.read(this.readSize_, this.onReadDone_.bind(this));
-    this.list_stack_ = [];
-    this.field_info_ = [];
-    this.flag_info_ = {
-      'tkhd': [
-        ['Track_enabled', 0x1],
-        ['Track_in_movie', 0x2],
-        ['Track_in_preview', 0x4]
-      ],
-      'tfhd': [
-        ['base-data-offset', 0x1],
-        ['sample-description-index-present', 0x2],
-        ['default-sample-duration-present', 0x8],
-        ['default-sample-size-present', 0x10],
-        ['default-sample-flags-present', 0x20],
-        ['duration-is-empty', 0x10000],
-        ['default-base-is-moof', 0x20000],
-      ],
-      'trun': [
-        ['data-offset-present', 0x1],
-        ['first-sample-flags-present', 0x4],
-        ['sample-duration-present', 0x100],
-        ['sample-size-present', 0x200],
-        ['sample-flags-present', 0x400],
-        ['sample-composition-time-offsets-present', 0x800]
-      ]
-    };
-    this.full_box_info_ = {
-      'mvhd': parseMvhd,
-      'trex': parseTrex,
-      'tkhd': parseTkhd,
-      'mdhd': parseMdhd
-    };
-  };
-
-  ISOClient.prototype.dumpFieldInfoList_ = function(fieldInfoList) {
-    if (fieldInfoList.length == 0)
-      return "";
-
-    var result = '<ul class="box_list">';
-    for (var i = 0; i < fieldInfoList.length; ++i) {
-      var fieldInfo = fieldInfoList[i];
-      result += "<li><a href='#' onclick='selectBox(" + fieldInfo.start + ',' +
-        fieldInfo.end;
-      if (fieldInfo.value !== null) {
-        result += ", " + fieldInfo.value;
-      }
-      result += ")'";
-      result += " style='white-space:nowrap;'>";
-      result += fieldInfo.id;
-      result += '</a>';
-      result += this.dumpFieldInfoList_(fieldInfo.children);
-      result += '</li>';
-    }
-    return result + '</ul>';
-  };
-
-  ISOClient.prototype.onReadDone_ = function(status, buf) {
-    if (status == 'eof') {
-      var str = this.dumpFieldInfoList_(this.field_info_);
-      var div = document.getElementById('element_tree');
-      div.innerHTML = str;
-      //$( "#element_tree ul").accordion();
-      this.doneCallback_(true);
-      return;
-    }
-
-    if (status != 'ok') {
-      console.log('onReadDone_(' + status + ')');
-      this.doneCallback_(false);
-      return;
-    }
-
-    if (this.parser_.parse(buf).length > 0) {
-      console.log('onReadDone_(' + status + ') : parser error');
-      return;
-    }
-    this.file_.read(this.readSize_, this.onReadDone_.bind(this));
-  };
-
-  ISOClient.prototype.onListStart = function(id, elementPosition,
-                                             bodyPosition) {
-    this.list_stack_.push({ id: id, start: elementPosition,
-                            child_info: this.field_info_ });
-    this.field_info_ = [];
-    return msetools.ParserStatus.OK;
-  };
-
-
-  ISOClient.prototype.onListEnd = function(id, size) {
-    var info = this.list_stack_.pop();
-    if (info.id != id) {
-      console.log("Unexpected list end for id '" + id + "'");
-      return false;
-    }
-
-    var fieldInfo = new FieldInfo(info.id, info.start, info.start + size);
-    for (var i = 0; i < this.field_info_.length; ++i) {
-      fieldInfo.addChildFieldInfo(this.field_info_[i]);
-    }
-
-    // Restore old field_info_ state.
-    this.field_info_ = info.child_info;
-    this.field_info_.push(fieldInfo);
-    return true;
-  };
-
-
-  ISOClient.prototype.onBox = function(id, value, elementPosition,
-                                       bodyPosition) {
-    this.field_info_.push(
-      new FieldInfo(id, elementPosition, bodyPosition + value.length));
-
-    return true;
-  };
-
-  ISOClient.prototype.onFullBox = function(id, version, flags, value,
-                                           elementPosition, bodyPosition) {
-
-    var info = new FieldInfo(id, elementPosition, bodyPosition + value.length);
-
-    info.addChild('version', bodyPosition - 4, bodyPosition - 3);
-    var flagsFieldInfo = new FieldInfo('flags', bodyPosition - 3, bodyPosition);
-
-    var flag_info = this.flag_info_[id];
-    if (flag_info) {
-      for (var i = 0; i < flag_info.length; ++i) {
-        var name = flag_info[i][0];
-        var mask = flag_info[i][1];
-        var position = bodyPosition - 3;
-        if (mask < 0x010000)
-          ++position;
-        if (mask < 0x000100)
-          ++position;
-
-        if ((flags & mask) != 0) {
-          flagsFieldInfo.addChild(name, position, position + 1);
-        }
-      }
-    }
-    info.addChildFieldInfo(flagsFieldInfo);
-
-    var parser = this.full_box_info_[id];
-    if (parser) {
-      var bfp = new BoxFieldParser(bodyPosition, value, info);
-      if (!parser(version, flags, bfp)) {
-        console.log("Failed to parse '" + id + "'");
-        return false;
-      }
-    }
-
-    this.field_info_.push(info);
-
-    return true;
-  };
-
   function getURL() {
     return document.getElementById('u').value;
   }
@@ -599,6 +352,7 @@
   function loadUrl() {
     var url = getURL();
     var client = new ISOClient(url, parsingDone.bind(this, url));
+    //var client = new TSClient(url, parsingDone.bind(this, url));
   }
 
   var PAGE_SIZE = 512;
@@ -619,11 +373,39 @@
     callback(buffer);
   }
 
-  function parsingDone(url, status) {
-    if (!status) {
+  function dumpFieldInfoList (fieldInfoList) {
+    if (fieldInfoList.length == 0)
+      return "";
+
+    var result = '<ul class="box_list">';
+    for (var i = 0; i < fieldInfoList.length; ++i) {
+      var fieldInfo = fieldInfoList[i];
+      result += "<li><a href='#' onclick='selectBox(" + fieldInfo.start + ',' +
+        fieldInfo.end;
+      if (fieldInfo.value !== null) {
+        result += ", " + fieldInfo.value;
+      }
+      result += ")'";
+      result += " style='white-space:nowrap;'>";
+      result += fieldInfo.id;
+      result += '</a>';
+      result += dumpFieldInfoList(fieldInfo.children);
+      result += '</li>';
+    }
+
+    return result + '</ul>';
+  };
+
+  function parsingDone(url, fieldInfo) {
+    if (fieldInfo == null) {
       console.log('Parsing failed');
       return;
     }
+
+    var str = dumpFieldInfoList(fieldInfo);
+    var div = document.getElementById('element_tree');
+    div.innerHTML = str;
+
     var file = new msetools.RemoteFile(url);
     hexView = new HexView('hex_view', PAGE_SIZE, readFromFile.bind(this, file));
     hexView.setBaseOffset(0, onSetBaseOffsetDone);
@@ -670,6 +452,7 @@
     hexView.setBaseOffset(newOffset, onSetBaseOffsetDone);
   }
 
+  window['FieldInfo'] = FieldInfo;
   window['onPageLoad'] = onPageLoad;
   window['selectBox'] = selectBox;
 })(window);
