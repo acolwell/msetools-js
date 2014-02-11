@@ -136,14 +136,27 @@ ISOBMFFParser.prototype.parseElementHeader = function(buf) {
     return ERROR_STATUS;
   }
 
-  if (size == 1) {
-    this.errors_.push('64-bit box sizes not supported yet!.');
-    return ERROR_STATUS;
-  }
-
   var id = '';
   for (var i = 0; i < 4; ++i) {
     id += String.fromCharCode(br.readUint8());
+  }
+
+  if (size == 1) {
+    if (buf.length < 16) {
+      return {status: msetools.ParserStatus.NEED_MORE_DATA,
+              bytesUsed: 0, id: '', size: 0 };
+    }
+
+    var highWord = br.readUint32();
+    var lowWord = br.readUint32();
+
+    // Reject 64-bit values that would overflow a double.
+    if ((highWord >> 20) > 0) {
+      this.errors_.push('64-bit box size is too large.');
+      return ERROR_STATUS;
+    }
+
+    size = highWord * Math.pow(2, 32) + lowWord;
   }
 
   if (id == 'uuid') {
