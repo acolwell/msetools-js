@@ -98,6 +98,74 @@
     return true;
   }
 
+  function parseTfhd(version, flags, bfp) {
+    try {
+      bfp.addUInt('track_ID', 32);
+      if (flags['base-data-offset']) {
+        bfp.addUInt('base_data_offset', 64);
+      }
+
+      if (flags['sample-description-index-present']) {
+        bfp.addUInt('sample_description_index', 32);
+      }
+
+      if (flags['default-sample-duration-present']) {
+        bfp.addUInt('default_sample_duration', 32);
+      }
+
+      if (flags['default-sample-size-present']) {
+        bfp.addUInt('default_sample_size', 32);
+      }
+
+      if (flags['default-sample-flags-present']) {
+        bfp.addUInt('default_sample_flags', 32);
+      }
+    } catch (e) {
+      console.log(e.message);
+      return false;
+    }
+    return true;
+  }
+
+  function parseTrun(version, flags, bfp) {
+    try {
+      var sample_count = bfp.addUInt('sample_count', 32);
+      if (flags['data-offset-present']) {
+        bfp.addUInt('data_offset', 32);
+      }
+
+      if (flags['first-sample-flags-present']) {
+        bfp.addUInt('first_sample_flags', 32);
+      }
+
+      for (var i = 0; i < sample_count; ++i) {
+        if (flags['sample-duration-present']) {
+          bfp.addUInt('sample_duration[' + i + ']', 32);
+        }
+
+        if (flags['sample-size-present']) {
+          bfp.addUInt('sample_size[' + i + ']', 32);
+        }
+
+        if (flags['sample-flags-present']) {
+          bfp.addUInt('sample_flags[' + i + ']', 32);
+        }
+
+        if (flags['sample-composition-time-offsets-present']) {
+          if (version == 0) {
+            bfp.addUInt('sample_composition_time_offsets[' + i + ']', 32);
+          } else {
+            bfp.addInt('sample_composition_time_offsets[' + i + ']', 32);
+          }
+        }
+      }
+    } catch (e) {
+      console.log(e.message);
+      return false;
+    }
+    return true;
+  }
+
   function ISOClient(url, doneCallback) {
     this.doneCallback_ = doneCallback;
     this.parser_ = new msetools.ISOBMFFParser(this);
@@ -134,6 +202,8 @@
       'mvhd': parseMvhd,
       'trex': parseTrex,
       'tkhd': parseTkhd,
+      'tfhd': parseTfhd,
+      'trun': parseTrun,
       'mdhd': parseMdhd
     };
   };
@@ -205,6 +275,7 @@
     info.addChild('version', bodyPosition - 4, bodyPosition - 3);
     var flagsFieldInfo = new FieldInfo('flags', bodyPosition - 3, bodyPosition);
 
+    var flagMap = {};
     var flag_info = this.flag_info_[id];
     if (flag_info) {
       for (var i = 0; i < flag_info.length; ++i) {
@@ -218,6 +289,7 @@
 
         if ((flags & mask) != 0) {
           flagsFieldInfo.addChild(name, position, position + 1);
+          flagMap[name] = 1;
         }
       }
     }
@@ -226,7 +298,7 @@
     var parser = this.full_box_info_[id];
     if (parser) {
       var bfp = new BoxFieldParser(bodyPosition, value, info);
-      if (!parser(version, flags, bfp)) {
+      if (!parser(version, flagMap, bfp)) {
         console.log("Failed to parse '" + id + "'");
         return false;
       }

@@ -17,6 +17,7 @@
   var nameOfThisFile = 'msetools-dev.js';
   var files = [
     'buffer_reader.js',
+    'buffer_writer.js',
     'file.js',
     'element_list_parser.js',
     'isobmff_parser.js',

@@ -231,7 +231,6 @@
     var start = this.position_  + this.index_;
 
     if (numBits > 52) {
-      var tmp = this.readBits_(numBits - 52);
       if (this.readBits_(numBits - 52) != 0) {
         throw new Error("Number too large to represent accurately");
       }
@@ -245,6 +244,7 @@
     if (this.updateParentEnd_ && end > this.parent_.end)
       this.parent_.end = end;
     this.parent_.addChild(name, start, end, value);
+    return value;
   };
 
   BoxFieldParser.prototype.addField = function (name, numBits, arraySize) {
@@ -457,6 +457,7 @@
   }
 
   window['FieldInfo'] = FieldInfo;
+  window['BoxFieldParser'] = BoxFieldParser;
   window['onPageLoad'] = onPageLoad;
   window['selectBox'] = selectBox;
 })(window);
