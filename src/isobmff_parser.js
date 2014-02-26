@@ -223,7 +223,6 @@ ISOBMFFParser.prototype.isIdAList = function(id) {
  * @private
  */
 ISOBMFFParser.ID_IS_FULL_BOX_MAP_ = {
-  'mvhd': true,
   'tkhd': true,
   'mdhd': true,
   'hdlr': true,

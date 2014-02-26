@@ -247,6 +247,23 @@
     return value;
   };
 
+  BoxFieldParser.prototype.addString = function (name, numChars) {
+    var start = this.position_  + this.index_;
+
+    var value = "";
+    for (var i = 0; i < numChars; ++i) {
+      value += String.fromCharCode(this.readBits_(8));
+    }
+
+    var end = this.position_  + this.index_;
+    if (start == end)
+      ++end;
+    if (this.updateParentEnd_ && end > this.parent_.end)
+      this.parent_.end = end;
+    this.parent_.addChild(name, start, end, value);
+    return value;
+  };
+
   BoxFieldParser.prototype.addField = function (name, numBits, arraySize) {
     arraySize = arraySize || 1;
 
@@ -262,7 +279,11 @@
     this.parent_.addChild(name, start, end);
   };
 
-  BoxFieldParser.prototype.skip = function (numBits, arraySize){
+  BoxFieldParser.prototype.hasMoreData = function () {
+    return this.index_ < this.buf_.length;
+  };
+
+  BoxFieldParser.prototype.skip = function (numBits, arraySize) {
     arraySize = arraySize || 1;
     numBits *= arraySize;
 
