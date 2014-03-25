@@ -160,8 +160,15 @@ ISOBMFFParser.prototype.parseElementHeader = function(buf) {
   }
 
   if (id == 'uuid') {
-    this.errors_.push('uuid boxes not supported yet!.');
-    return ERROR_STATUS;
+    id += "(";
+    for (var i = 0; i < 16; ++i) {
+      var ch = br.readUint8();
+      if (ch < 0x10) {
+          id += "0";
+      }
+      id += ch.toString(16);
+    }
+    id += ")";
   }
 
   var bytesUsed = buf.length - br.bytesLeft();
