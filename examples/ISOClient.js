@@ -14,6 +14,9 @@
 (function(window, undefined) {
   function bs_if(condition, then_layout, else_layout) {
     return function(bfp) {
+      if (else_layout === undefined) {
+          else_layout = [];
+      }
       var state = {};
       for (var i in bfp.parent_.children) {
         var fi = bfp.parent_.children[i];
@@ -90,7 +93,7 @@
           throw "Invalid field type '" + fieldType + "'";
 
         var arrayElementType = fieldType.substr(0, a);
-	var arrayElementSize = bs_type_size_(arrayElementType);
+        var arrayElementSize = bs_type_size_(arrayElementType);
         if (a + 1 == b) {
           // Array that goes to the end. (e.g. u32[])
           for (var j = 0; bfp.hasMoreData(); ++j) {
@@ -98,11 +101,24 @@
           }
           continue;
         }  else if (b > a + 1) {
-	  var arraySize = parseInt(fieldType.substr(a + 1, b - a));
+          var arraySize = parseInt(fieldType.substr(a + 1, b - a));
           // Fixed size array. (e.g. u32[8])
-	  bfp.addField(fieldName, arrayElementSize, arraySize);
+          bfp.addField(fieldName, arrayElementSize, arraySize);
           continue;
         }
+      }
+
+      if (/[a-z0-9]+\[[a-zA-Z0-9_]+\]/.test(fieldType)) {
+        var a = fieldType.indexOf("[");
+        var b = fieldType.indexOf("]");
+
+        var arrayElementType = fieldType.substr(0, a);
+        var arrayElementSize = bs_type_size_(arrayElementType);
+        var arraySizeFieldName = fieldType.substr(a + 1, b - a - 1);
+        for (var j = 0; j < bfp.getValue(arraySizeFieldName); ++j) {
+            bs_read_type_(fieldName + "[" + j + "]", arrayElementType, bfp);
+        }
+        continue;
       }
       
       throw "Unsupported field type '" + fieldType + "'";
@@ -128,8 +144,8 @@
 
   function FullBoxDef(bodyLayout) {
     var layout = [
-      ["flags", "u8"],
-      ["version", "u24"]
+      ["version", "u8"],
+      ["flags", "u24"]
     ];
     for (var i = 0; i < bodyLayout.length; ++i) {
       layout.push(bodyLayout[i]);
@@ -164,6 +180,47 @@
     ["matrix", "u32[9]"],
     ["pre_defined", "u32[6]"],
     ["next_track_ID", "u32"],
+  ]);
+
+  var mehd = FullBoxDef([
+    bs_if("version == 1", [
+      ["fragment_duration", "u64"],
+    ], [
+      ["fragment_duration", "u32"],
+    ]),
+  ]);
+
+  var tfdt = FullBoxDef([
+    bs_if("version == 1", [
+      ["base_media_decode_time", "u64"],
+    ], [
+      ["base_media_decode_time", "u32"],
+    ]),
+  ]);
+
+  var saiz = FullBoxDef([
+    bs_if("flags == 1", [
+      ["aux_info_type", "u32"],
+      ["aux_info_type_parameter", "u32"],
+    ]),
+    ["default_sample_info_size", "u8"],
+    ["sample_count", "u32"],
+    bs_if("default_sample_info_size == 0", [
+      ["sample_info_size", "u8[sample_count]"]
+    ])
+  ]);
+
+  var saio = FullBoxDef([
+    bs_if("flags == 1", [
+      ["aux_info_type", "u32"],
+      ["aux_info_type_parameter", "u32"],
+    ]),
+    ["entry_count", "u32"],
+    bs_if("version == 1", [
+      ["offset", "u64[entry_count]"],
+    ], [
+      ["offset", "u32[entry_count]"],
+    ])
   ]);
 
   function parseSampleFlags(bfp) {
@@ -334,6 +391,10 @@
     this.box_info_ = {
       'ftyp': bs_parse.bind(this, ftyp),
       'mvhd': bs_parse.bind(this, mvhd),
+      'mehd': bs_parse.bind(this, mehd),
+      'tfdt': bs_parse.bind(this, tfdt),
+      'saiz': bs_parse.bind(this, saiz),
+      'saio': bs_parse.bind(this, saio),
     };
 
     this.full_box_info_ = {

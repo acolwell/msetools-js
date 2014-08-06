@@ -227,6 +227,15 @@
     this.bitsLeftInCurrentByte_ = 8;
   }
 
+  BoxFieldParser.prototype.getValue = function(name) {
+      for (var i = 0; i < this.parent_.children.length; ++i) {
+          var fi = this.parent_.children[i];
+          if (fi.id == name)
+            return fi.value;
+      }
+      throw "Failed to find field value '" + name + "'";
+  }
+
   BoxFieldParser.prototype.addUInt = function (name, numBits) {
     var start = this.position_  + this.index_;
 
